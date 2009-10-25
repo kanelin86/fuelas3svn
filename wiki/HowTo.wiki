@@ -48,16 +48,31 @@ package
         	repository.addEventListener( SVNEvent.AUTHENTICATED, onAuthenticated );
         	repository.addEventListener( LatestRevisionEvent.LATEST_REVISION, onLatestRevision );
         	repository.addEventListener( GetDirEvent.GET_DIR, onGetDir );
+                repository.addEventListener( GetFileEvent.GET_FILE, onGetFile );
         	repository.connect( userName, userPassword );
 		}
 		
+                private function onGetFile(event:GetFileEvent):void
+		{
+			trace( "got file", event.path );
+                        //this is using AIR to save the file to your desktop with it's directory structure in place.
+			var path:String = ( event.path.charAt() == "/" ) ? event.path.substring( 1 ) : event.path;
+
+			var f:File = File.desktopDirectory.resolvePath( path );
+			var stream:FileStream = new FileStream();
+			stream.open( f , FileMode.WRITE );
+			stream.writeBytes( event.contents );
+			stream.close();
+		}
+
 		private function onGetDir( e:GetDirEvent ):void
 		{
 			var entries:Array = e.entries;			
 			__entries = entries;
 			
                        //the entries are an array of SVNDirEntry objects.
-			
+
+		      getFile( "/Classes/MyClass.as" );
 		}
 		
 		private function onLatestRevision( e:LatestRevisionEvent ):void
@@ -68,6 +83,12 @@ package
 			getDir( "/Classes" );
 		}
 		
+                public function getFile( path:String ):void
+		{
+			trace( "getting file", path );
+			repository.getFile( path, false, true, __latestrevision );	
+		}
+
 		public function getDir( path:String ):void
 		{
 			trace( "getting dir", path );
