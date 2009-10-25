@@ -11,7 +11,7 @@ package com.hurlant.crypto.hash
 {
 	import flash.utils.ByteArray;
 
-	public class HMAC
+	public class HMAC implements IHMAC
 	{
 		private var hash:IHash;
 		private var bits:uint;
@@ -24,6 +24,15 @@ package com.hurlant.crypto.hash
 		public function HMAC(hash:IHash, bits:uint=0) {
 			this.hash = hash;
 			this.bits = bits;
+		}
+		
+
+		public function getHashSize():uint {
+			if (bits!=0) {
+				return bits/8;
+			} else {
+				return hash.getHashSize();
+			}
 		}
 		
 		/**
