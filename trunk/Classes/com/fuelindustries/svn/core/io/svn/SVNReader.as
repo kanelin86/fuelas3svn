@@ -53,7 +53,14 @@ package com.fuelindustries.svn.core.io.svn
 						
 			return null;
 		}
-
+		
+		public static function readItem( ba:ByteArray ):SVNItem 
+		{
+        	var ch:String = skipWhiteSpace(ba);
+        	return parseItem(ba, null, ch);
+    	}
+    	
+    	
 		public static function parse( ba:ByteArray, template:String, values:Array):Array
 		{
 			var readItems:Array = readTuple(ba, DEFAULT_TEMPLATE);
@@ -224,7 +231,8 @@ package com.fuelindustries.svn.core.io.svn
 			}
 			return index;
 		}
-
+		
+		//This is the same as the private SVNReader.readItem method in the java version
 		private static function parseItem( ba:ByteArray, item:SVNItem, ch:String ):SVNItem
 		{
 			if (item == null) 

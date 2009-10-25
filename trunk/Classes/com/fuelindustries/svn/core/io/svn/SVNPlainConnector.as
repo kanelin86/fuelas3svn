@@ -95,7 +95,12 @@ package com.fuelindustries.svn.core.io.svn
 			var ba:ByteArray = new ByteArray();
 			mySocket.readBytes( ba );
 			
-			trace( "ondata", ba.readUTFBytes( ba.bytesAvailable ) );
+			var maxbytes:int = 500;
+			
+			var bytestooutput:int = ( ba.bytesAvailable > maxbytes ) ? maxbytes : ba.bytesAvailable;
+			
+			trace( "ondata", ba.readUTFBytes( bytestooutput ), ( bytestooutput == maxbytes ) ? "...... output truncated" : "" );
+			
 			ba.position = 0;
 			
 			

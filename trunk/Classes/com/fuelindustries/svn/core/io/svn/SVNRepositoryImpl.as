@@ -1,19 +1,17 @@
 package com.fuelindustries.svn.core.io.svn 
 {
-	import com.fuelindustries.svn.events.LatestRevisionEvent;
-	import com.fuelindustries.svn.core.SVNDirEntry;
 	import com.fuelindustries.svn.core.SVNURL;
 	import com.fuelindustries.svn.core.auth.SVNAuthentication;
 	import com.fuelindustries.svn.core.auth.SVNPasswordAuthentication;
 	import com.fuelindustries.svn.core.io.ISVNReporter;
 	import com.fuelindustries.svn.core.io.SVNRepository;
 	import com.fuelindustries.svn.core.io.commands.GetDirCommand;
+	import com.fuelindustries.svn.core.io.commands.GetFileCommand;
 	import com.fuelindustries.svn.core.io.commands.LatestRevisionCommand;
 	import com.fuelindustries.svn.core.io.commands.StatCommand;
-	import com.fuelindustries.svn.core.util.SVNDate;
+	import com.fuelindustries.svn.events.LatestRevisionEvent;
 	import com.fuelindustries.svn.events.SVNCommandCompleteEvent;
 	import com.fuelindustries.svn.events.SVNEvent;
-	import com.fuelindustries.svn.events.StatEvent;
 
 	import flash.events.Event;
 
@@ -91,7 +89,18 @@ package com.fuelindustries.svn.core.io.svn
 			var command:GetDirCommand = new GetDirCommand(path, url, repositoryRoot, repositoryPath, rev);
 			myConnection.sendCommand( command );
 		}
-	
+		
+		public function getFile( path:String, wantprops:Boolean = false, wantcontents:Boolean = true, rev:int = -1 ):void
+		{
+			if( rev <= 0 )
+			{
+				throw new Error( "Get File Revision needs to be bigger then 0" );	
+			}
+			
+			var command:GetFileCommand = new GetFileCommand( "(w(s(n)ww))", ["get-file", getRepositoryPath(path), rev, wantprops, wantcontents] );
+			myConnection.sendCommand( command );
+		}
+		
 		private function commandComplete( e:SVNCommandCompleteEvent ):void
 		{
 			
