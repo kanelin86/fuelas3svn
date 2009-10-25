@@ -1,0 +1,85 @@
+#summary This is a sample of how to use the library
+
+This is an example of how to use the library and some of it's features.
+The library only supports connecting to a svn:// protocol currently.
+http:// and others will be implemented when the svn:// is completed.
+
+{{{
+package 
+{
+	import com.fuelindustries.svn.core.SVNDirEntry;
+	import com.fuelindustries.svn.core.SVNURL;
+	import com.fuelindustries.svn.core.io.svn.SVNRepositoryImpl;
+	import com.fuelindustries.svn.events.GetDirEvent;
+	import com.fuelindustries.svn.events.LatestRevisionEvent;
+	import com.fuelindustries.svn.events.SVNEvent;
+
+	import flash.display.MovieClip;
+	import flash.events.Event;
+
+	/**
+	 * @author julian
+	 */
+	public class SVNTest extends MovieClip 
+	{
+		
+		private var repository:SVNRepositoryImpl;
+		
+		private var __latestrevision:int;
+		
+		private var __entries:Array;
+		
+		public function get entries():Array
+		{
+			return( __entries );	
+		}
+		
+		public function SVNTest()
+		{
+			
+		//the url to your repository
+                var url:SVNURL = SVNURL.parseURIEncoded("svn://myproject/");
+        	
+                //your username and password for your repository
+                var userName:String = "myusername";
+        	var userPassword:String = "mypassword";
+        	
+        	repository = new SVNRepositoryImpl( url );
+        	repository.addEventListener( SVNEvent.AUTHENTICATED, onAuthenticated );
+        	repository.addEventListener( LatestRevisionEvent.LATEST_REVISION, onLatestRevision );
+        	repository.addEventListener( GetDirEvent.GET_DIR, onGetDir );
+        	repository.connect( userName, userPassword );
+		}
+		
+		private function onGetDir( e:GetDirEvent ):void
+		{
+			var entries:Array = e.entries;			
+			__entries = entries;
+			
+                       //the entries are an array of SVNDirEntry objects.
+			
+		}
+		
+		private function onLatestRevision( e:LatestRevisionEvent ):void
+		{
+			__latestrevision = e.latestRevision;
+			trace( "onLatestRevision", e.latestRevision );
+                        //will get return the files and folders in the svn://myproject/Classes directory
+			getDir( "/Classes" );
+		}
+		
+		public function getDir( path:String ):void
+		{
+			trace( "getting dir", path );
+			repository.getDir(path, __latestrevision);
+		}
+		
+		private function onAuthenticated( e:Event ):void
+		{
+			trace( "onAuthenticated" );
+			repository.getLatestRevision();
+		}
+	}
+}
+
+}}}
