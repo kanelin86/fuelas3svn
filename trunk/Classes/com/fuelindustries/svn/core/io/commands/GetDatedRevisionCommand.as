@@ -2,16 +2,16 @@ package com.fuelindustries.svn.core.io.commands
 {
 	import com.fuelindustries.svn.core.io.SVNCommand;
 	import com.fuelindustries.svn.core.io.svn.SVNReader;
-	import com.fuelindustries.svn.events.LatestRevisionEvent;
+	import com.fuelindustries.svn.events.GetDatedRevisionEvent;
 
 	import flash.utils.ByteArray;
 
 	/**
 	 * @author julian
 	 */
-	public class LatestRevisionCommand extends SVNCommand 
+	public class GetDatedRevisionCommand extends SVNCommand 
 	{
-		public function LatestRevisionCommand( template:String, items:Array)
+		public function GetDatedRevisionCommand(template:String = null, items:Array = null)
 		{
 			super( template, items );
 		}
@@ -21,9 +21,10 @@ package com.fuelindustries.svn.core.io.commands
 			var values:Array = parse(ba, "r", null);
 			var revision:int = SVNReader.getLong(values, 0);
 			
-			__event = new LatestRevisionEvent( LatestRevisionEvent.LATEST_REVISION, revision, this );
+			__event = new GetDatedRevisionEvent( GetDatedRevisionEvent.DATED_REVISION, revision, this );
 			commandComplete();
 
 		}
+		
 	}
 }

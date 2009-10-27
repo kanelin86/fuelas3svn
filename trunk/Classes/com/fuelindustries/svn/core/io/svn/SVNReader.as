@@ -1,7 +1,10 @@
 package com.fuelindustries.svn.core.io.svn 
 {
 	import com.fuelindustries.lang.Character;
+	import com.fuelindustries.svn.core.SVNProperties;
 	import com.fuelindustries.svn.core.io.SVNRepository;
+
+	import mx.controls.List;
 
 	import flash.errors.EOFError;
 	import flash.utils.ByteArray;
@@ -52,6 +55,40 @@ package com.fuelindustries.svn.core.io.svn
 			}
 						
 			return null;
+		}
+		
+		public static function getProperties( items:Array, index:int, properties:SVNProperties ):SVNProperties
+		{
+			 properties = properties == null ? new SVNProperties() : properties;
+	
+	        if (items == null || index >= items.length) 
+	        {
+	            return properties;
+	        }
+	        
+	        if( !(items[ index ] is Array) ) 
+	        {
+	            return properties;
+	        }
+	        
+	         var props:Array = getItemList(items, index);
+	         
+	         for( var i:int = 0; i<props.length; i++ )
+	         {
+	         	var item:SVNItem = props[ i ] as SVNItem;
+	         	if (item.getKind() != SVNItem.LIST) 
+	         	{
+               		//TODO implement proper errors
+               		//SVNErrorMessage err = SVNErrorMessage.create(SVNErrorCode.RA_SVN_MALFORMED_DATA, "Proplist element not a list");
+                	//SVNErrorManager.error(err, SVNLogType.NETWORK);
+                	throw new Error( "Proplist element not a list" );
+            	}
+            
+            	var propItems:Array = parseTupleArray("sb", item.getItems(), null);
+            	properties.put(getString(propItems, 0), getBytes(propItems, 1));
+	         }
+	         
+	         return properties;
 		}
 		
 		public static function readItem( ba:ByteArray ):SVNItem 
