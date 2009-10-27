@@ -1,5 +1,7 @@
 package com.fuelindustries.svn.core.io.svn 
 {
+	import com.fuelindustries.svn.core.io.commands.GetRevisionPropertiesCommand;
+	import com.fuelindustries.svn.core.io.commands.GetDatedRevisionCommand;
 	import com.fuelindustries.svn.core.SVNURL;
 	import com.fuelindustries.svn.core.auth.SVNAuthentication;
 	import com.fuelindustries.svn.core.auth.SVNPasswordAuthentication;
@@ -74,6 +76,15 @@ package com.fuelindustries.svn.core.io.svn
 			myConnection.sendCommand( command );
 		}
 		
+		public function getDatedRevision( date:Date = null ):void
+		{
+			if( date == null ) date = new Date();
+			
+			var dateString:String = date.getFullYear() + "-" + ( date.getMonth() + 1 ) + "-" + date.getDate() + "T" + date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds() + "." + date.getMilliseconds() +"Z";
+			var command:GetDatedRevisionCommand = new GetDatedRevisionCommand( "(w(s))", ["get-dated-rev", dateString] );
+			myConnection.sendCommand( command );
+		}
+		
 		public function stat( rev:int ):void
 		{
 			var command:StatCommand = new StatCommand( "(w(s(n)))", [ "stat", "/", rev ] );
@@ -98,6 +109,12 @@ package com.fuelindustries.svn.core.io.svn
 			}
 			
 			var command:GetFileCommand = new GetFileCommand( "(w(s(n)ww))", ["get-file", getRepositoryPath(path), rev, wantprops, wantcontents] );
+			myConnection.sendCommand( command );
+		}
+		
+		public function getRevisionProperties( rev:int ):void
+		{
+			var command:GetRevisionPropertiesCommand = new GetRevisionPropertiesCommand("(w(n))", [ "rev-proplist", getRevisionObject(rev) ] );
 			myConnection.sendCommand( command );
 		}
 		
