@@ -5,102 +5,135 @@ The library only supports connecting to a svn:// protocol currently.
 http:// and others will be implemented when the svn:// is completed.
 
 {{{
-package 
-{
-	import com.fuelindustries.svn.core.SVNDirEntry;
-	import com.fuelindustries.svn.core.SVNURL;
-	import com.fuelindustries.svn.core.io.svn.SVNRepositoryImpl;
-	import com.fuelindustries.svn.events.GetDirEvent;
-	import com.fuelindustries.svn.events.LatestRevisionEvent;
-	import com.fuelindustries.svn.events.SVNEvent;
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" creationComplete="init()" >
 
-	import flash.display.MovieClip;
-	import flash.events.Event;
-
-	/**
-	 * @author julian
-	 */
-	public class SVNTest extends MovieClip 
-	{
+<mx:Script>
+	<![CDATA[
 		
-		private var repository:SVNRepositoryImpl;
+		import com.fuelindustries.svn.core.SVNDirEntry;
+		import com.fuelindustries.svn.core.io.svn.*;
+		import com.fuelindustries.svn.core.SVNURL;
+		import mx.events.*;
+		import mx.controls.listClasses.*;
+		import mx.controls.treeClasses.*;
 		
-		private var __latestrevision:int;
+		import flash.ui.ContextMenu;
+		import flash.ui.ContextMenuItem;
+		import flash.events.ContextMenuEvent;
+		import flash.filesystem.*;
 		
-		private var __entries:Array;
+		import com.fuelindustries.svn.client.*;
 		
-		public function get entries():Array
-		{
-			return( __entries );	
-		}
+		private var svn:SVNClient;
 		
-		public function SVNTest()
+		private var currentItem:IListItemRenderer;
+		
+		private var treeContextMenu:ContextMenu;
+		
+		private function init():void
 		{
 			
-		//the url to your repository
-                var url:SVNURL = SVNURL.parseURIEncoded("svn://myproject/");
-        	
-                //your username and password for your repository
-                var userName:String = "myusername";
-        	var userPassword:String = "mypassword";
-        	
-        	repository = new SVNRepositoryImpl( url );
-        	repository.addEventListener( SVNEvent.AUTHENTICATED, onAuthenticated );
-        	repository.addEventListener( LatestRevisionEvent.LATEST_REVISION, onLatestRevision );
-        	repository.addEventListener( GetDirEvent.GET_DIR, onGetDir );
-                repository.addEventListener( GetFileEvent.GET_FILE, onGetFile );
-        	repository.connect( userName, userPassword );
-		}
-		
-                private function onGetFile(event:GetFileEvent):void
-		{
-			trace( "got file", event.path );
-                        //this is using AIR to save the file to your desktop with it's directory structure in place.
-			var path:String = ( event.path.charAt() == "/" ) ? event.path.substring( 1 ) : event.path;
-
-			var f:File = File.desktopDirectory.resolvePath( path );
-			var stream:FileStream = new FileStream();
-			stream.open( f , FileMode.WRITE );
-			stream.writeBytes( event.contents );
-			stream.close();
-		}
-
-		private function onGetDir( e:GetDirEvent ):void
-		{
-			var entries:Array = e.entries;			
-			__entries = entries;
+			var url:String = "svn://yoursvnpath";
+			var username:String = "username";
+			var password:String = "password";
 			
-                       //the entries are an array of SVNDirEntry objects.
+			
+			var menu:ContextMenu = new ContextMenu();
+		    menu.hideBuiltInItems();
+		    
+		    var exportitem:ContextMenuItem = new ContextMenuItem( "Export" );
+		    exportitem.addEventListener( ContextMenuEvent.MENU_ITEM_SELECT, exportSelected ); 
+            menu.customItems.push(exportitem);
+            
+            var historyitem:ContextMenuItem = new ContextMenuItem( "Show History" );
+            historyitem.addEventListener( ContextMenuEvent.MENU_ITEM_SELECT, historySelected ); 
+            menu.customItems.push(historyitem);
+            
+            treeContextMenu = menu;
+			
+			svn = new SVNClient( File.desktopDirectory.resolvePath( "exports" ).url + "/" );
+			svn.connect( url, username, password );
+			svn.addEventListener( Event.CHANGE, updateTree );
+			svn.addEventListener( Event.COMPLETE, commandComplete );
+		
+		}
+		
+		private function exportSelected( e:ContextMenuEvent ):void
+		{
+			tree1.enabled = false;
+			var cell:IListItemRenderer = e.contextMenuOwner as IListItemRenderer;
+			var item:RepositoryDataItem = cell.data as RepositoryDataItem;
+			tree1.selectedItem = item;
+			svn.export( item.entry );
+		}
+		
+		private function historySelected( e:ContextMenuEvent ):void
+		{
+			tree1.enabled = false;
+			var cell:IListItemRenderer = e.contextMenuOwner as IListItemRenderer;
+			var item:RepositoryDataItem = cell.data as RepositoryDataItem;
+			tree1.selectedItem = item;
+			svn.getLog( item.entry );
+		}
+		
+		private function commandComplete( e:Event ):void
+		{
+			tree1.enabled = true;	
+		}
+		
+		private function updateTree( e:Event ):void
+		{
+			if( tree1.dataProvider == null )
+			{
+				tree1.dataProvider = svn.data;
+			}
+			else
+			{
+				tree1.invalidateList();	
+			}
+			
+			
+			tree1.enabled = true;
+		}
 
-		      getFile( "/Classes/MyClass.as" );
-		}
 		
-		private function onLatestRevision( e:LatestRevisionEvent ):void
+		private function itemOpen( e:TreeEvent ):void
 		{
-			__latestrevision = e.latestRevision;
-			trace( "onLatestRevision", e.latestRevision );
-                        //will get return the files and folders in the svn://myproject/Classes directory
-			getDir( "/Classes" );
-		}
-		
-                public function getFile( path:String ):void
-		{
-			trace( "getting file", path );
-			repository.getFile( path, false, true, __latestrevision );	
-		}
+			currentItem = e.itemRenderer;
+			
+			var item:RepositoryDataItem = currentItem.data as RepositoryDataItem;
+			
+			var children:Array = item.children;
 
-		public function getDir( path:String ):void
-		{
-			trace( "getting dir", path );
-			repository.getDir(path, __latestrevision);
+			if( children.length == 1 )
+			{
+				var firstchild:RepositoryDataItem = children[ 0 ] as RepositoryDataItem;
+				if( firstchild.label == RepositoryDataItem.DEFAULT_LABEL )
+				{
+					tree1.enabled = false;
+					var dir:SVNDirEntry = item.entry;
+					var url:SVNURL = dir.getURL();
+			
+					svn.getDir( url.getURIEncodedPath() );
+				}
+					
+			}
 		}
 		
-		private function onAuthenticated( e:Event ):void
+		
+		
+		private function itemOver( e:ListEvent ):void
 		{
-			trace( "onAuthenticated" );
-			repository.getLatestRevision();
+			TreeItemRenderer(e.itemRenderer).contextMenu = treeContextMenu;
 		}
-	}
-}
+		
+	]]>
+</mx:Script>
+<mx:Canvas width="100%" height="100%">
+	<mx:Tree id="tree1" labelField="label" showRoot="false" width="300" height="100%" x="0" y="0" itemOpen="itemOpen( event )" itemRollOver="itemOver( event )">
+	</mx:Tree>
+</mx:Canvas>
+</mx:Application>
 
 }}}
