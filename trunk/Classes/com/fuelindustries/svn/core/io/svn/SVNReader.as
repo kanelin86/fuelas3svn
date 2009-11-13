@@ -3,8 +3,7 @@ package com.fuelindustries.svn.core.io.svn
 	import com.fuelindustries.lang.Character;
 	import com.fuelindustries.svn.core.SVNProperties;
 	import com.fuelindustries.svn.core.io.SVNRepository;
-
-	import mx.controls.List;
+	import com.fuelindustries.svn.core.util.SVNDate;
 
 	import flash.errors.EOFError;
 	import flash.utils.ByteArray;
@@ -17,8 +16,14 @@ package com.fuelindustries.svn.core.io.svn
 		private static var  DEAFAULT_ERROR_TEMPLATE:String = "nssn";
     	private static var  DEFAULT_TEMPLATE:String = "wl";
     	private static var  UTF8_CHARSET_STRING:String = "UTF-8";
-		
-		 public static function getLong( items:Array, index:int ):int 
+
+		public static function getDate( items:Array, index:int ):Date 
+		{
+			var str:String = getString( items, index );
+			return SVNDate.parseDate( str ).getDate( );
+		}
+
+		public static function getLong( items:Array, index:int ):int 
 		 {
 	        if (items == null || index >= items.length ) 
 	        {

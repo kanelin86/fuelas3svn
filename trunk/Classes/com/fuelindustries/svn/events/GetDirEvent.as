@@ -10,6 +10,12 @@ package com.fuelindustries.svn.events
 		public static const GET_DIR:String = "get-dir";
 		
 		private var __entries:Array;
+		private var __path:String;
+		
+		public function get path():String
+		{
+			return( __path );	
+		}
 		
 		public function get entries():Array
 		{
@@ -17,9 +23,10 @@ package com.fuelindustries.svn.events
 		}
 		
 		
-		public function GetDirEvent(type:String, entries:Array, command:SVNCommand )
+		public function GetDirEvent(type:String, entries:Array, path:String, command:SVNCommand )
 		{
 			__entries = entries;
+			__path = path;
 			super( type, command );
 		}
 	}

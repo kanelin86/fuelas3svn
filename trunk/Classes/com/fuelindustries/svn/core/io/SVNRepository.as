@@ -19,7 +19,12 @@ package com.fuelindustries.svn.core.io
 		{
 			myLocation = location;
 		}
-
+		
+		public function setLocation( url:SVNURL ):void
+		{
+			myLocation = url;	
+		}		
+		
 		public function getLocation():SVNURL 
 		{
 			return myLocation;

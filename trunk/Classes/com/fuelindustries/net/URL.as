@@ -38,6 +38,8 @@ package com.fuelindustries.net
             __ref = result[ 7 ];
 			
 			
+			__host.replace( "@", "" );
+			
 			if( __protocol != "" )
 			{
 				__protocol = __protocol.substring( 0, __protocol.length - 3 );	
@@ -88,9 +90,9 @@ package com.fuelindustries.net
         {
         	var str:String = "";
         	
-        	if( __userinfo!= null  ) str += __userinfo + "@";
-        	if( __host!= null  ) str += __host;
-        	if( __port!= null  ) str += ":" + __port;
+        	if( __userinfo != null && __userinfo != "" ) str += __userinfo;
+        	if( __host != null  && __host != "") str += __host;
+        	if( __port != null && __port != ""  ) str += ":" + __port;
         	
         	return( str );
         } 
