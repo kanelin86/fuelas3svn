@@ -121,7 +121,7 @@ package com.fuelindustries.svn.core.io.commands
 				__entries.push( entry );
 			}
 			
-			__event = new GetDirEvent( GetDirEvent.GET_DIR, __entries, this );
+			__event = new GetDirEvent( GetDirEvent.GET_DIR, __entries, __path, this );
 			commandComplete();
 		}
 	}

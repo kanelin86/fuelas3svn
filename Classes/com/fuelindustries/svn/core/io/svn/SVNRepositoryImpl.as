@@ -1,17 +1,23 @@
 package com.fuelindustries.svn.core.io.svn 
 {
-	import com.fuelindustries.svn.core.io.commands.GetRevisionPropertiesCommand;
-	import com.fuelindustries.svn.core.io.commands.GetDatedRevisionCommand;
+	import com.fuelindustries.svn.core.ISVNLogEntryHandler;
 	import com.fuelindustries.svn.core.SVNURL;
 	import com.fuelindustries.svn.core.auth.SVNAuthentication;
 	import com.fuelindustries.svn.core.auth.SVNPasswordAuthentication;
+	import com.fuelindustries.svn.core.io.ISVNEditor;
 	import com.fuelindustries.svn.core.io.ISVNReporter;
 	import com.fuelindustries.svn.core.io.SVNRepository;
+	import com.fuelindustries.svn.core.io.commands.GetDatedRevisionCommand;
 	import com.fuelindustries.svn.core.io.commands.GetDirCommand;
 	import com.fuelindustries.svn.core.io.commands.GetFileCommand;
+	import com.fuelindustries.svn.core.io.commands.GetRevisionPropertiesCommand;
 	import com.fuelindustries.svn.core.io.commands.LatestRevisionCommand;
+	import com.fuelindustries.svn.core.io.commands.LogCommand;
+	import com.fuelindustries.svn.core.io.commands.ReparentCommand;
 	import com.fuelindustries.svn.core.io.commands.StatCommand;
+	import com.fuelindustries.svn.core.io.commands.UpdateCommand;
 	import com.fuelindustries.svn.events.LatestRevisionEvent;
+	import com.fuelindustries.svn.events.ReparentEvent;
 	import com.fuelindustries.svn.events.SVNCommandCompleteEvent;
 	import com.fuelindustries.svn.events.SVNEvent;
 
@@ -38,8 +44,13 @@ package com.fuelindustries.svn.core.io.svn
 		{
 			return( myAuthentication );
 		}
+		
+		public function get latestRevision():int
+		{
+			return( __latestRevision );	
+		}
 
-		public function SVNRepositoryImpl(location:SVNURL )
+		public function SVNRepositoryImpl( location:SVNURL )
 		{
 			super( location );
 		}
@@ -85,6 +96,17 @@ package com.fuelindustries.svn.core.io.svn
 			myConnection.sendCommand( command );
 		}
 		
+		public function reparent( url:String ):void
+		{
+			if( getLocation().toString() == url )
+			{
+				return;		
+			}	
+			
+			var command:ReparentCommand = new ReparentCommand( "(w(s))", ["reparent", url ] );
+			myConnection.sendCommand(command);
+		}
+		
 		public function stat( rev:int ):void
 		{
 			var command:StatCommand = new StatCommand( "(w(s(n)))", [ "stat", "/", rev ] );
@@ -118,6 +140,37 @@ package com.fuelindustries.svn.core.io.svn
 			myConnection.sendCommand( command );
 		}
 		
+		public function update( rev:int, target:String, recursive:Boolean, editor:ISVNEditor ):void
+		{
+			var command:UpdateCommand = new UpdateCommand("(w((n)swww))", [ "update", rev, target, recursive, "infinity", true ], editor );
+			myConnection.sendCommand( command );	
+		}
+		
+		public function log( path:String, startrev:int, endrev:int, changedpaths:Boolean, strictnode:Boolean, limit:int, includemergedrevisions:Boolean, revisionPropertyNames:Array, handler:ISVNLogEntryHandler ):void
+		{
+			if( path == null || path == "/" )
+			{
+				path = "";
+			}
+			
+			var buffer:Array;
+			var template:String;
+
+			if( revisionPropertyNames != null && revisionPropertyNames.length > 0 )
+			{
+				buffer = ["log", [ path ], getRevisionObject(startrev), getRevisionObject(endrev), changedpaths, strictnode, limit, includemergedrevisions, "revprops", revisionPropertyNames ];
+				 template = "(w((*s)(n)(n)wwnww(*s)))";
+			}
+			else
+			{
+				buffer = ["log", [ path ], getRevisionObject(startrev), getRevisionObject(endrev),changedpaths, strictnode,limit, includemergedrevisions, "all-revprops"];
+				template = "(w((*s)(n)(n)wwnww()))";
+			}
+			
+			var command:LogCommand = new LogCommand( template, buffer, handler );
+			myConnection.sendCommand( command );
+		}
+		
 		private function commandComplete( e:SVNCommandCompleteEvent ):void
 		{
 			
@@ -127,12 +180,13 @@ package com.fuelindustries.svn.core.io.svn
 					__latestRevision = LatestRevisionEvent( e.event ).latestRevision;
 					dispatchEvent( e.event );
 					break;
+				case ReparentEvent.REPARENT:
+					myLocation = SVNURL.parseURIEncoded( ReparentEvent( e.event ).path );
 				default:
 					dispatchEvent( e.event );
 					break;
 			}	
 		}
-
 		
 		private function onAuthenticated( e:Event ):void
 		{

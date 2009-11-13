@@ -2,6 +2,7 @@ package com.fuelindustries.svn.core.util
 {
 	import com.hurlant.crypto.hash.MD5;
 
+	import flash.system.Capabilities;
 	import flash.utils.ByteArray;
 
 	/**
@@ -9,6 +10,15 @@ package com.fuelindustries.svn.core.util
 	 */
 	public class SVNFileUtil 
 	{
+		
+		public static function get isWindows():Boolean
+		{
+			var OS:String = Capabilities.os;
+			var isWindows:Boolean = OS.indexOf("Windows") == 0;
+			return( isWindows );
+		}
+		
+		
 		public static function toHexDigest( digest:ByteArray ):String 
 		{
 			if (digest == null) 

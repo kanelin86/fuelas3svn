@@ -17,6 +17,29 @@ package com.fuelindustries.svn.core.util
 			return parseDatestamp( str );
 		}
 
+		public static function formatDate( date:Date, formatZeroDate:Boolean = false ):String
+		{
+			if (date == null) 
+			{
+				return null;
+			} else if (!formatZeroDate && date.getTime( ) == 0) 
+			{
+				return null;
+			}
+        
+			if (date is SVNDate) 
+			{
+				var extendedDate:SVNDate = date as SVNDate;
+				return( extendedDate.format( ) );
+			}
+			else
+			{
+				var svndate:SVNDate = new SVNDate( );
+				svndate.setDate( date );
+				return( svndate.format( ) );	
+			}
+		}
+
 		private static function parseDatestamp( str:String ):SVNDate 
 		{
 			if (str == null) 
@@ -104,9 +127,22 @@ package com.fuelindustries.svn.core.util
 	    	__date = new Date( year, month, date, hours, minutes, seconds, ms );	
 	    }
 	    
+	    public function setDate( d:Date ):void
+	    {
+			__date = d;    	
+		}
+	    
 	    public function getDate():Date
 	    {
 	    	return( __date );	
-	    }
+		}
+
+		public function format():String 
+		{
+			//"yyyy-MM-dd'T'HH:mm:ss.SSS"
+			var date:Date = getDate( );
+			var dateString:String = date.getFullYear( ) + "-" + ( date.getMonth( ) + 1 ) + "-" + date.getDate( ) + "T" + date.getHours( ) + ":" + date.getMinutes( ) + ":" + date.getSeconds( ) + "." + date.getMilliseconds( ) + "Z";
+			return( dateString );
+		}
 	}
 }

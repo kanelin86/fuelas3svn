@@ -305,28 +305,33 @@ package com.fuelindustries.svn.core
 			url += protocol;
 			url += "://";
         
-			if (userInfo != null) 
+			if (userInfo != null && userInfo != "" ) 
 			{
 				url += userInfo;
 				url += "@";
 			}
+			
 			if (host != null) 
 			{
 				url += host;
 			}
+			
 			if (port >= 0) 
 			{
 				url += ":";
 				url += port;
 			}
+			
 			if (path != null && !StringUtils.startsWith( path, "/" )) 
 			{
 				path = '/' + path;
 			}
+			
 			if ("/" == path) 
 			{
 				path = "";
 			}
+			
 			url += path;
 			return url.toString( );
 		}
@@ -376,7 +381,12 @@ package com.fuelindustries.svn.core
 				path = SVNPathUtil.append( path, segment );
 			}
 			
-			var url:String = composeURL( getProtocol( ), getUserInfo( ), getHost( ), myIsDefaultPort ? -1 : getPort( ), path );
+			var protocol:String = getProtocol();
+			var user:String = getUserInfo();
+			var host:String = getHost();
+			var port:int =  myIsDefaultPort ? -1 : getPort( );
+			
+			var url:String = composeURL(  protocol, user, host, port, path );
 			
 			return parseURIEncoded( url );
 		}

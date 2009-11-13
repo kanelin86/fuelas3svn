@@ -82,6 +82,7 @@ package com.fuelindustries.svn.core.io.commands
 		override protected function isComplete(str:String):Boolean
 		{
 			var pattern:String = str.substring( str.length - 20, str.length );
+			              
 			if( pattern == " 0: ( success ( ) ) " )
 			{
 				return true;

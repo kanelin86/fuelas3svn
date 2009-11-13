@@ -56,5 +56,79 @@ package com.fuelindustries.svn.core.util
         
 			return result;
 		}
+
+		public static function canonicalizePath(path:String):String 
+		{
+			if (path == null)
+			{
+				return null;           
+			}
+			var result:String = "";
+			var i:int = 0;
+			for (i = 0; i < path.length; i++) 
+			{
+				if (path.charAt( i ) == "/" || path.charAt( i ) == ":") 
+				{
+					break;
+				}
+			}
+        
+			var scheme:String = null;
+			var index:int = 0;
+			if (i > 0 && i + 2 < path.length && path.charAt( i ) == ":" && path.charAt( i + 1 ) == "/" && path.charAt( i + 2 ) == "/") 
+			{
+				scheme = path.substring( 0, i + 3 );
+				result += scheme;
+				index = i + 3;
+			}
+			if (index < path.length && path.charAt( index ) == "/") 
+			{
+				result += "/";
+				index++;
+            
+				if (SVNFileUtil.isWindows && scheme == null && index < path.length && path.charAt( index ) == "/") 
+				{
+					result += "/";
+					index++;
+				}
+			}
+        
+			var segmentCount:int = 0;
+			while (index < path.length) 
+			{
+				var nextIndex:int = index;
+				while (nextIndex < path.length && path.charAt( nextIndex ) != "/") 
+				{
+					nextIndex++;
+				}
+				var segmentLength:int = nextIndex - index;
+				if (segmentLength == 0 || (segmentLength == 1 && path.charAt( index ) == ".")) 
+				{
+				} 
+				else 
+				{
+					if (nextIndex < path.length) 
+					{
+						segmentLength++;
+					}
+					result += (path.substring( index, index + segmentLength ));
+					segmentCount++;
+				}
+				index = nextIndex;
+				if (index < path.length) 
+				{
+					index++;
+				}
+			}
+			if ((segmentCount > 0 || scheme != null) && result.charAt( result.length - 1 ) == "/") 
+			{
+				result = result.slice( result.length - 1, result.length );
+			}
+			if (SVNFileUtil.isWindows && segmentCount < 2 && result.length >= 2 && result.charAt( 0 ) == "/" && result.charAt( 1 ) == "/") 
+			{
+				result = result.slice( 0, 1 );
+			}
+			return result.toString( );
+		}
 	}
 }
