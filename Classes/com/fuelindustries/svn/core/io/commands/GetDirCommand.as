@@ -2,11 +2,15 @@ package com.fuelindustries.svn.core.io.commands
 {
 	import com.fuelindustries.svn.core.SVNDirEntry;
 	import com.fuelindustries.svn.core.SVNURL;
+	import com.fuelindustries.svn.core.errors.SVNErrorCode;
+	import com.fuelindustries.svn.core.errors.SVNErrorManager;
+	import com.fuelindustries.svn.core.errors.SVNErrorMessage;
 	import com.fuelindustries.svn.core.io.SVNCommand;
 	import com.fuelindustries.svn.core.io.svn.SVNItem;
 	import com.fuelindustries.svn.core.io.svn.SVNNodeKind;
 	import com.fuelindustries.svn.core.io.svn.SVNReader;
 	import com.fuelindustries.svn.core.util.SVNDate;
+	import com.fuelindustries.svn.core.util.SVNLogType;
 	import com.fuelindustries.svn.events.GetDirEvent;
 
 	import flash.utils.ByteArray;
@@ -27,9 +31,6 @@ package com.fuelindustries.svn.core.io.commands
 		
 		private const STAT:String = "stat";
 		private const GET_DIR:String = "get-dir";
-		
-		
-		private var __lastposition:int;
 		
 		public function get entries():Array
 		{
@@ -103,10 +104,7 @@ package com.fuelindustries.svn.core.io.commands
 				var item:SVNItem = dirents[ i ] as SVNItem;
 				if (item.getKind() != SVNItem.LIST) 
 				{
-                 	//TODO implement error
-                 	//SVNErrorMessage err = SVNErrorMessage.create(SVNErrorCode.RA_SVN_MALFORMED_DATA, "Dirlist element not a list");
-                    //SVNErrorManager.error(err, SVNLogType.NETWORK);
-                    throw new Error( "Dirlist element not a list" );
+                    SVNErrorManager.error(SVNErrorMessage.create(SVNErrorCode.RA_SVN_MALFORMED_DATA, "Dirlist element not a list"), SVNLogType.NETWORK);
                 }
                 
                 var direntProps:Array = SVNReader.parseTupleArray("swnsr(?s)(?s)", item.getItems(), null);

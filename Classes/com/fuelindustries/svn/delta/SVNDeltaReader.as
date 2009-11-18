@@ -1,10 +1,13 @@
 package com.fuelindustries.svn.delta 
 {
+	import com.fuelindustries.svn.core.errors.SVNErrorCode;
+	import com.fuelindustries.svn.core.errors.SVNErrorManager;
+	import com.fuelindustries.svn.core.errors.SVNErrorMessage;
 	import com.fuelindustries.svn.core.io.ISVNDeltaConsumer;
 	import com.fuelindustries.svn.core.io.diff.SVNDiffWindow;
+	import com.fuelindustries.svn.core.util.SVNLogType;
 
 	import flash.utils.ByteArray;
-	import flash.utils.CompressionAlgorithm;
 
 	/**
 	 * @author julian
@@ -52,10 +55,7 @@ package com.fuelindustries.svn.delta
             
 				if ( s != "S".charCodeAt( ) || v != 'V'.charCodeAt( ) || n != 'N'.charCodeAt( ) || (version != 0 && version != 1 )) 
 				{
-					//TODO implement Error
-					//SVNErrorMessage err = SVNErrorMessage.create(SVNErrorCode.SVNDIFF_CORRUPT_WINDOW, "Svndiff has invalid header");
-					//SVNErrorManager.error(err, SVNLogType.DEFAULT);
-					throw new Error( "Svndiff has invalid header" );
+					SVNErrorManager.error(SVNErrorMessage.create(SVNErrorCode.SVNDIFF_CORRUPT_WINDOW, "Svndiff has invalid header"), SVNLogType.DEFAULT);
 				}
             
 				myVersion = version;
@@ -102,9 +102,7 @@ package com.fuelindustries.svn.delta
 				}
 				if (sourceLength > 0 && (sourceOffset < myLastSourceOffset || sourceOffset + sourceLength < myLastSourceOffset + myLastSourceLength)) 
 				{
-					//SVNErrorMessage err = SVNErrorMessage.create(SVNErrorCode.SVNDIFF_CORRUPT_WINDOW, "Svndiff has backwards-sliding source views");
-					//SVNErrorManager.error(err, SVNLogType.DEFAULT);
-					throw new Error( "Svndiff has backwards-sliding source views" );
+					SVNErrorManager.error(SVNErrorMessage.create(SVNErrorCode.SVNDIFF_CORRUPT_WINDOW, "Svndiff has backwards-sliding source views"), SVNLogType.DEFAULT);
 				}
             
 				if ( myBuffer.bytesAvailable < instructionsLength + newDataLength) 

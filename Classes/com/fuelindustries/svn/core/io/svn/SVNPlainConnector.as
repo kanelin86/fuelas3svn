@@ -1,6 +1,10 @@
 package com.fuelindustries.svn.core.io.svn 
 {
 	import com.fuelindustries.svn.core.SVNURL;
+	import com.fuelindustries.svn.core.errors.SVNErrorCode;
+	import com.fuelindustries.svn.core.errors.SVNErrorManager;
+	import com.fuelindustries.svn.core.errors.SVNErrorMessage;
+	import com.fuelindustries.svn.core.util.SVNLogType;
 	import com.fuelindustries.svn.events.SocketDataEvent;
 
 	import flash.errors.IOError;
@@ -55,8 +59,7 @@ package com.fuelindustries.svn.core.io.svn
 			}
        		catch( e:SecurityError )
 			{
-				//TODO implement error
-				throw new Error( e.message );
+				SVNErrorManager.error( SVNErrorMessage.create(SVNErrorCode.IO_ERROR, e.message ), SVNLogType.NETWORK );
 			}
 		}
 
@@ -75,8 +78,7 @@ package com.fuelindustries.svn.core.io.svn
 				}
 				catch( e:IOError )
 				{
-					//TODO implement error
-					throw new Error( e.message );	
+					SVNErrorManager.error( SVNErrorMessage.create(SVNErrorCode.IO_ERROR, e.message ), SVNLogType.NETWORK );
 				}
 				finally
 				{

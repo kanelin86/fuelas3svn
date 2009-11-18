@@ -2,8 +2,12 @@ package com.fuelindustries.svn.core.io.svn
 {
 	import com.fuelindustries.lang.Character;
 	import com.fuelindustries.svn.core.SVNProperties;
+	import com.fuelindustries.svn.core.errors.SVNErrorCode;
+	import com.fuelindustries.svn.core.errors.SVNErrorManager;
+	import com.fuelindustries.svn.core.errors.SVNErrorMessage;
 	import com.fuelindustries.svn.core.io.SVNRepository;
 	import com.fuelindustries.svn.core.util.SVNDate;
+	import com.fuelindustries.svn.core.util.SVNLogType;
 
 	import flash.errors.EOFError;
 	import flash.utils.ByteArray;
@@ -15,7 +19,6 @@ package com.fuelindustries.svn.core.io.svn
 	{
 		private static var  DEAFAULT_ERROR_TEMPLATE:String = "nssn";
     	private static var  DEFAULT_TEMPLATE:String = "wl";
-    	private static var  UTF8_CHARSET_STRING:String = "UTF-8";
 
 		public static function getDate( items:Array, index:int ):Date 
 		{
@@ -83,10 +86,9 @@ package com.fuelindustries.svn.core.io.svn
 	         	var item:SVNItem = props[ i ] as SVNItem;
 	         	if (item.getKind() != SVNItem.LIST) 
 	         	{
-               		//TODO implement proper errors
-               		//SVNErrorMessage err = SVNErrorMessage.create(SVNErrorCode.RA_SVN_MALFORMED_DATA, "Proplist element not a list");
-                	//SVNErrorManager.error(err, SVNLogType.NETWORK);
-                	throw new Error( "Proplist element not a list" );
+
+               		var err:SVNErrorMessage = SVNErrorMessage.create(SVNErrorCode.RA_SVN_MALFORMED_DATA, "Proplist element not a list");
+                	SVNErrorManager.error(err, SVNLogType.NETWORK);
             	}
             
             	var propItems:Array = parseTupleArray("sb", item.getItems(), null);
@@ -115,18 +117,48 @@ package com.fuelindustries.svn.core.io.svn
         	} 
         	else if ("failure" == word ) 
         	{
-            	//TODO implement errors
-            	//handleFailureStatus(list);
-            	throw new Error( "failed" );
+
+            	handleFailureStatus(list);
         	} 
         	else 
         	{
-            	//TODO
-            	//SVNErrorMessage err = SVNErrorMessage.create(SVNErrorCode.RA_SVN_MALFORMED_DATA, "Unknown status ''{0}'' in command response", word);
-            	//SVNErrorManager.error(err, SVNLogType.NETWORK);
-            	throw new Error( "Unknown status " + word + " in command response" );
+            	var err:SVNErrorMessage = SVNErrorMessage.create(SVNErrorCode.RA_SVN_MALFORMED_DATA, "Unknown status " + word + " in command response" );
+            	SVNErrorManager.error(err, SVNLogType.NETWORK);
         	}
         	return null;
+		}
+
+		public static function handleFailureStatus( list:Array ):void
+		{
+			if (list.length == 0) 
+			{
+				SVNErrorManager.error( SVNErrorMessage.create( SVNErrorCode.RA_SVN_MALFORMED_DATA, "Empty error list" ), SVNLogType.NETWORK );
+			}
+			var topError:SVNErrorMessage = getErrorMessage( list[ list.length - 1 ] as SVNItem );
+			var parentError:SVNErrorMessage = topError;
+        
+			for (var i:int = list.length - 2; i >= 0; i--) 
+			{
+				var item:SVNItem = list[ i ] as SVNItem;
+				var error:SVNErrorMessage = getErrorMessage( item );
+				parentError.setChildErrorMessage( error );
+				parentError = error;
+			}
+			SVNErrorManager.error( topError, SVNLogType.NETWORK );
+		}
+
+		private static function getErrorMessage( item:SVNItem ):SVNErrorMessage 
+		{
+			if (item.getKind( ) != SVNItem.LIST) 
+			{
+				SVNErrorManager.error( SVNErrorMessage.create( SVNErrorCode.RA_SVN_MALFORMED_DATA, "Malformed error list" ), SVNLogType.NETWORK );
+			}
+			var errorItems:Array = parseTupleArray( DEAFAULT_ERROR_TEMPLATE, item.getItems( ), null );
+			var code:int = int( errorItems[ 0 ] );
+			var errorCode:SVNErrorCode = SVNErrorCode.getErrorCode( code );
+			var errorMessage:String = getString( errorItems, 1 );
+			errorMessage = errorMessage == null ? "" : errorMessage;
+			return SVNErrorMessage.create( errorCode, errorMessage );
 		}
 
 		private static function getItemList( items:Array,  index:int ):Array 
@@ -149,10 +181,8 @@ package com.fuelindustries.svn.core.io.svn
         	var item:SVNItem = parseItem(ba, null, ch);
         	if (item.getKind() != SVNItem.LIST) 
         	{
-            	//TODO implement error
-            	//SVNErrorMessage err = SVNErrorMessage.create(SVNErrorCode.RA_SVN_MALFORMED_DATA);
-            	//SVNErrorManager.error(err, SVNLogType.NETWORK);
-            	throw new Error( "SVNReader.readTuple() malformed data" );
+            	var err:SVNErrorMessage = SVNErrorMessage.create(SVNErrorCode.RA_SVN_MALFORMED_DATA);
+            	SVNErrorManager.error(err, SVNLogType.NETWORK);
        		}
        		
         	return parseTupleArray(template, item.getItems(), null);
@@ -255,10 +285,7 @@ package com.fuelindustries.svn.core.io.svn
 							}
 							break;
 						default:
-							//TODO implement error
-							//SVNErrorMessage err = SVNErrorMessage.create(SVNErrorCode.RA_SVN_MALFORMED_DATA);
-							// SVNErrorManager.error(err, SVNLogType.NETWORK);
-							trace( "parseTuple switch malformed data" );
+							SVNErrorManager.error(SVNErrorMessage.create(SVNErrorCode.RA_SVN_MALFORMED_DATA), SVNLogType.NETWORK);
 					}
 					index++;
 				}
@@ -266,10 +293,7 @@ package com.fuelindustries.svn.core.io.svn
         
 			if (index == (template.length - 1) && template.charAt( index ) != ")") 
 			{
-				//TODO implement error
-				//SVNErrorMessage err = SVNErrorMessage.create(SVNErrorCode.RA_SVN_MALFORMED_DATA);
-				//SVNErrorManager.error(err, SVNLogType.NETWORK);
-				trace( "parseTuple end malformed data" );
+				SVNErrorManager.error(SVNErrorMessage.create(SVNErrorCode.RA_SVN_MALFORMED_DATA), SVNLogType.NETWORK);
 			}
 			return index;
 		}
@@ -298,10 +322,7 @@ package com.fuelindustries.svn.core.io.svn
 						value = value * 10 + Character.digit(ch, 10);
 						if (previousValue != int( value / 10 )) 
 						{
-							//TODO implement error
-							//SVNErrorMessage err = SVNErrorMessage.create(SVNErrorCode.RA_SVN_MALFORMED_DATA, "Number is larger than maximum");
-							//SVNErrorManager.error(err, SVNLogType.NETWORK);
-							throw new Error( "Number is larger than maximum" );
+							SVNErrorManager.error(SVNErrorMessage.create(SVNErrorCode.RA_SVN_MALFORMED_DATA, "Number is larger than maximum"), SVNLogType.NETWORK);
 						}
 						continue;
 					}
@@ -326,10 +347,7 @@ package com.fuelindustries.svn.core.io.svn
 					} 
                 	catch( e:EOFError ) 
 					{
-                    	//TODO implement error
-                    	//SVNErrorMessage err = SVNErrorMessage.create(SVNErrorCode.RA_SVN_MALFORMED_DATA);
-                    	//SVNErrorManager.error(err, SVNLogType.NETWORK);
-                    	throw new Error( "MALFORMED DATA" );
+                    	SVNErrorManager.error(SVNErrorMessage.create(SVNErrorCode.RA_SVN_MALFORMED_DATA), SVNLogType.NETWORK);
 					}
                 	
 					item.setKind( SVNItem.BYTES );
@@ -386,10 +404,7 @@ package com.fuelindustries.svn.core.io.svn
         
 			if (!Character.isWhitespace( ch )) 
 			{
-				//TODO implement ERror
-				//SVNErrorMessage err = SVNErrorMessage.create(SVNErrorCode.RA_SVN_MALFORMED_DATA);
-				//SVNErrorManager.error(err, SVNLogType.NETWORK);
-				throw new Error( "white space malformed data" );
+				SVNErrorManager.error(SVNErrorMessage.create(SVNErrorCode.RA_SVN_MALFORMED_DATA), SVNLogType.NETWORK);
 			}
 			return item;
 		}
@@ -468,22 +483,55 @@ package com.fuelindustries.svn.core.io.svn
 			} 
         	else if (item is Number) 
 			{
-				return item.toString( );
+				return String( item );
 			}
 			return null;
 		}
 
 		public static function hasValue( items:Array, index:int,  value:Object):Boolean 
-		 {
-		 	return( false );	
-		 }
-		 
-		  private static function readChar(ba:ByteArray):String
+		{
+			if (items == null || index >= items.length ) 
+			{
+				return false;
+			}
+			
+			if (items[ index ] is Array) 
+			{
+				var arr:Array = items[ index ] as Array;
+				for( var i:int = 0; i < arr.length; i++ )
+				{
+					if( arr[ i ] == value )
+					{
+						return( true );		
+					}
+				}
+			} 
+			else 
+			{
+				if (items[ index ] == null) 
+				{
+					return value == null;
+				}
+				
+				if (items[index] is ByteArray && value is String) 
+				{
+					var ba:ByteArray = items[ index ] as ByteArray;
+					var oldPosition:int = ba.position;
+					var str:String = ba.readUTFBytes( ba.bytesAvailable );
+					ba.position = oldPosition;
+					return( str == value );
+				}
+				
+				return items[ index ] == value;
+			}
+			return false;
+		}
+
+		private static function readChar(ba:ByteArray):String
 		  {
 		  	if( ba.bytesAvailable < 1 )
 		  	{
-		  		//TODO implement error
-		  		throw new Error( "Malformed data" );
+		  		SVNErrorManager.error(SVNErrorMessage.create(SVNErrorCode.RA_SVN_MALFORMED_DATA), SVNLogType.NETWORK);
 		  	}
 		  	
 		  	var utf:String = ba.readUTFBytes( 1 );

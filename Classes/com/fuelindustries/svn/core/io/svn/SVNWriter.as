@@ -1,6 +1,7 @@
 package com.fuelindustries.svn.core.io.svn 
 {
 	import com.fuelindustries.svn.core.SVNProperties;
+	import com.fuelindustries.svn.core.util.SVNDate;
 
 	import flash.utils.ByteArray;
 	import flash.utils.Dictionary;
@@ -39,8 +40,7 @@ package com.fuelindustries.svn.core.io.svn
                 
                 if(item is Date) 
                 {
-                    //TODO implement SVNDate
-                    //item = SVNDate.formatDate((Date) item, true);
+                    item = SVNDate.formatDate(item as Date, true);
                 }
                 
                 

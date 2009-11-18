@@ -2,7 +2,11 @@ package com.fuelindustries.svn.core.io.svn
 {
 	import com.fuelindustries.svn.core.SVNURL;
 	import com.fuelindustries.svn.core.auth.SVNPasswordAuthentication;
+	import com.fuelindustries.svn.core.errors.SVNErrorCode;
+	import com.fuelindustries.svn.core.errors.SVNErrorManager;
+	import com.fuelindustries.svn.core.errors.SVNErrorMessage;
 	import com.fuelindustries.svn.core.io.SVNCommand;
+	import com.fuelindustries.svn.core.util.SVNLogType;
 	import com.fuelindustries.svn.events.SVNCommandCompleteEvent;
 	import com.fuelindustries.svn.events.SVNEvent;
 	import com.fuelindustries.svn.events.SocketDataEvent;
@@ -93,15 +97,14 @@ package com.fuelindustries.svn.core.io.svn
         
 			if( minVer > 2) 
 			{
-				//TODO implement errors
-				//SVNErrorManager.error(SVNErrorMessage.create(SVNErrorCode.RA_SVN_BAD_VERSION, "Server requires minimum version {0}", minVer), SVNLogType.NETWORK);
+
+				SVNErrorManager.error(SVNErrorMessage.create(SVNErrorCode.RA_SVN_BAD_VERSION, "Server requires minimum version " + minVer ), SVNLogType.NETWORK);
 				throw new Error( "Server requires minimum version " + minVer );
 			} 
         	else if (maxVer < 2) 
 			{
-				//TODO implement errors
-				//SVNErrorManager.error(SVNErrorMessage.create(SVNErrorCode.RA_SVN_BAD_VERSION, "Server requires maximum version {0}", maxVer), SVNLogType.NETWORK);
-				throw new Error( "Server requires maximum version " + maxVer );
+				SVNErrorManager.error(SVNErrorMessage.create(SVNErrorCode.RA_SVN_BAD_VERSION, "Server requires maximum version " + maxVer), SVNLogType.NETWORK);
+
 			}
 
 			var capabilities:Array = items[ 3 ] as Array;
@@ -110,9 +113,7 @@ package com.fuelindustries.svn.core.io.svn
         
 			if (!hasCapability( EDIT_PIPELINE )) 
 			{
-				//TODO implement error
-				//SVNErrorManager.error(SVNErrorMessage.create(SVNErrorCode.RA_SVN_BAD_VERSION, "Server does not support edit pipelining"), SVNLogType.NETWORK);
-				throw new Error( "Server does not support edit pipelining" );
+				SVNErrorManager.error(SVNErrorMessage.create(SVNErrorCode.RA_SVN_BAD_VERSION, "Server does not support edit pipelining"), SVNLogType.NETWORK);
 			}
         
         
@@ -140,10 +141,7 @@ package com.fuelindustries.svn.core.io.svn
 				var item:SVNItem = capabilities[ i ] as SVNItem;
 				if( item.getKind( ) != SVNItem.WORD )
 				{
-					//TODO implement Errors
-					//SVNErrorMessage err = SVNErrorMessage.create(SVNErrorCode.RA_SVN_MALFORMED_DATA, "Capability entry is not a word"); 
-					//SVNErrorManager.error(err, SVNLogType.NETWORK);
-					throw new Error( "Capability entry is not a word" );
+					SVNErrorManager.error(SVNErrorMessage.create(SVNErrorCode.RA_SVN_MALFORMED_DATA, "Capability entry is not a word"), SVNLogType.NETWORK);
 				}
 				else
 				{
@@ -192,9 +190,8 @@ package com.fuelindustries.svn.core.io.svn
 					return ba;
 				}
 			}
-			
-			//TODO Error if for whatever reason it gets here it's malformed data
-			throw new Error( "data is malformed" );
+
+			SVNErrorManager.error( SVNErrorMessage.create( SVNErrorCode.RA_SVN_MALFORMED_DATA, "Data is Malformed" ), SVNLogType.NETWORK );
 			return bytes;
 		}
 		
@@ -259,7 +256,6 @@ package com.fuelindustries.svn.core.io.svn
 			
 			if( "success" == status ) 
             {
-            	trace( "successful connection" );
             	myState = COMMAND;
    				
    				receiveRepositoryCredentials( myRepository );
@@ -293,8 +289,8 @@ package com.fuelindustries.svn.core.io.svn
             
 				if (rootURL != null && rootURL.toString( ).length > repository.getLocation( ).toString( ).length) 
 				{
-               //TODO implement Error
-               // SVNErrorManager.error(SVNErrorMessage.create(SVNErrorCode.RA_SVN_MALFORMED_DATA, "Impossibly long repository root from server"), SVNLogType.NETWORK);
+
+               		SVNErrorManager.error(SVNErrorMessage.create(SVNErrorCode.RA_SVN_MALFORMED_DATA, "Impossibly long repository root from server"), SVNLogType.NETWORK);
 				}
             
 				if (repository != null && repository.getRepositoryRoot( false ) == null) 
@@ -318,7 +314,6 @@ package com.fuelindustries.svn.core.io.svn
 			}
 		}
 
-		//TODO abstract this out
 		private function arrayContains( arr:Array, value:String ):Boolean
 		{
 			for( var i:int = 0; i<arr.length; i++ )
@@ -373,6 +368,23 @@ package com.fuelindustries.svn.core.io.svn
 			return data;
 		}
 		
+		//TODO implement this method to AS
+		/*
+		 public function writeError( error:SVNErrorMessage )
+		 {
+        Object[] buffer = new Object[]{"failure"};
+        write("(w(", buffer);
+        for (; error != null; error = error.getChildErrorMessage()) {
+            String message = error.getMessage() == null ? "" : error.getMessage();
+            buffer = new Object[]{new Long(error.getErrorCode().getCode()), message, "", new Integer(0)};
+            write("(nssn)", buffer);
+        }
+        write(")", null);
+    }
+    */
+		
+		
+		
 		private function commandComplete( e:Event ):void
 		{
 			trace( "commandComplete connection", currentCommand );
@@ -382,7 +394,8 @@ package com.fuelindustries.svn.core.io.svn
 			currentCommand.connection = null;
 			currentCommand = null;
 			dispatchEvent( event );
-			
 		}
+		
+		
 	}
 }

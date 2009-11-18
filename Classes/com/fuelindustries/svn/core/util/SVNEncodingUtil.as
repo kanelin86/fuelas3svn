@@ -1,6 +1,9 @@
 package com.fuelindustries.svn.core.util 
 {
 	import com.fuelindustries.lang.Character;
+	import com.fuelindustries.svn.core.errors.SVNErrorCode;
+	import com.fuelindustries.svn.core.errors.SVNErrorManager;
+	import com.fuelindustries.svn.core.errors.SVNErrorMessage;
 
 	import flash.utils.ByteArray;
 
@@ -87,10 +90,7 @@ package com.fuelindustries.svn.core.util
 	
 		    if (bytes == null || bytes.length != path.length ) 
 		    {
-		        //TODO implement proper errors
-		        //SVNErrorMessage err = SVNErrorMessage.create(SVNErrorCode.BAD_URL, "path ''{0}'' doesn not look like URI-encoded path", path);
-		        //SVNErrorManager.error(err, SVNLogType.DEFAULT);
-		        throw new Error( "path " + path + " doesn't look like URI-encoded path" );
+		        SVNErrorManager.error(SVNErrorMessage.create(SVNErrorCode.BAD_URL, "path " + path + " doesn't look like URI-encoded path"), SVNLogType.DEFAULT);
 		    }
 		    
 	        for( var i:int = 0; i<bytes.length; i++) 
@@ -99,10 +99,7 @@ package com.fuelindustries.svn.core.util
 	            
 	            if( uri_char_validity[ index ] <= 0 && index != "%".charCodeAt() ) 
 	            {
-	               //TODO implement proper errors
-	                //SVNErrorMessage err = SVNErrorMessage.create(SVNErrorCode.BAD_URL, "path ''{0}'' doesn not look like URI-encoded path; character ''{1}'' is URI unsafe", new Object[] {path, ((char) bytes[i]) + ""});
-	                //SVNErrorManager.error(err, SVNLogType.DEFAULT);
-	                throw new Error( "path " + path + " doesn't look like URI-encoded path" );
+	                SVNErrorManager.error(SVNErrorMessage.create(SVNErrorCode.BAD_URL, "path " + path + " doesn't look like URI-encoded path"), SVNLogType.DEFAULT);
 	            }
 	        }
 	        return;

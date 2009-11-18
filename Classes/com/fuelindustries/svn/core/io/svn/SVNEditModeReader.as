@@ -1,8 +1,12 @@
 package com.fuelindustries.svn.core.io.svn 
 {
 	import com.fuelindustries.svn.core.SVNPropertyValue;
+	import com.fuelindustries.svn.core.errors.SVNErrorCode;
+	import com.fuelindustries.svn.core.errors.SVNErrorManager;
+	import com.fuelindustries.svn.core.errors.SVNErrorMessage;
 	import com.fuelindustries.svn.core.io.ISVNEditor;
 	import com.fuelindustries.svn.core.util.SVNHashMap;
+	import com.fuelindustries.svn.core.util.SVNLogType;
 	import com.fuelindustries.svn.core.util.SVNPathUtil;
 	import com.fuelindustries.svn.delta.SVNDeltaReader;
 
@@ -78,11 +82,7 @@ package com.fuelindustries.svn.core.io.svn
 			var tokenType:Boolean = myTokens.getValue( token ) as Boolean;
 			if( tokenType != isFile) 
 			{
-				//TODO implement proper errors
-            
-				//SVNErrorMessage err = SVNErrorMessage.create(SVNErrorCode.RA_SVN_MALFORMED_DATA, "Invalid file or dir token during edit");
-				//SVNErrorManager.error(err, SVNLogType.NETWORK);
-				throw new Error( "Invalid file or dir token during edit" );
+				SVNErrorManager.error(SVNErrorMessage.create(SVNErrorCode.RA_SVN_MALFORMED_DATA, "Invalid file or dir token during edit"), SVNLogType.NETWORK);
 			}
 		}
 
@@ -231,11 +231,7 @@ package com.fuelindustries.svn.core.io.svn
 			{
 				if (!myForReplay) 
 				{
-					//TODO implement errors
-                
-					//SVNErrorMessage error = SVNErrorMessage.create(SVNErrorCode.RA_SVN_UNKNOWN_CMD, "Command 'finish-replay' invalid outside of replays");
-					//SVNErrorManager.error(error, SVNLogType.NETWORK);
-					throw new Error( "Command 'finish-replay' invalid outside of replays" );
+					SVNErrorManager.error(SVNErrorMessage.create(SVNErrorCode.RA_SVN_UNKNOWN_CMD, "Command 'finish-replay' invalid outside of replays"), SVNLogType.NETWORK);
 				}
 				myDone = true;
 				myAborted = false;
@@ -246,36 +242,47 @@ package com.fuelindustries.svn.core.io.svn
 		{
 			while (!myDone) 
 			{
-				//SVNErrorMessage error = null;
+				var error:SVNErrorMessage = null;
 				var items:Array = readTuple( "wl", false );
 				var commandName:String = SVNReader.getString( items, 0 );
 				var template:String = COMMANDS_MAP[commandName] as String;
             
 				if (template == null) 
 				{
-                
-					//TODO implement proper errors
-					//SVNErrorMessage child = SVNErrorMessage.create(SVNErrorCode.RA_SVN_UNKNOWN_CMD, "Unknown command ''{0}''", commandName);
-					//error = SVNErrorMessage.create(SVNErrorCode.RA_SVN_CMD_ERR);
-					//error.setChildErrorMessage(child);
-					throw new Error( "Unknown Command " + commandName );
+					var child:SVNErrorMessage = SVNErrorMessage.create(SVNErrorCode.RA_SVN_UNKNOWN_CMD, "Unknown command " + commandName );
+					error = SVNErrorMessage.create(SVNErrorCode.RA_SVN_CMD_ERR);
+					error.setChildErrorMessage(child);
+
 				}
             
 				var parameters:Array = SVNReader.parseTupleArray( template, items[ 1 ] as Array, null );
 				processCommand( commandName, parameters );
 				
-           
-           //TODO need to write and send error messages here
+				if (error != null) 
+				{
+					if (error.getErrorCode( ) == SVNErrorCode.RA_SVN_CMD_ERR) 
+					{
+						myAborted = true;
+						if (!myDone) 
+						{
+							myEditor.abortEdit( );
+						}
+						
+						//TODO send an error command
+						//myConnection.writeError( error.getChildErrorMessage( ) );
+						
+						break;
+					}
+					SVNErrorManager.error( error, SVNLogType.NETWORK );
+				}
 			}
-
 		}
 
 		private function readTuple( template:String, readMalformedData:Boolean ):Array
 		{
 			if (myConnection == null) 
 			{
-				//SVNErrorManager.error(SVNErrorMessage.create(SVNErrorCode.RA_SVN_CONNECTION_CLOSED), SVNLogType.NETWORK);
-				throw new Error( "No Connection" );
+				SVNErrorManager.error(SVNErrorMessage.create(SVNErrorCode.RA_SVN_CONNECTION_CLOSED), SVNLogType.NETWORK);
 			}
 			
 			var data:Array = SVNReader.readTuple( myData, template);
