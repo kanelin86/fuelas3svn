@@ -1,9 +1,13 @@
 package com.fuelindustries.svn.core.io.commands 
 {
+	import com.fuelindustries.svn.core.errors.SVNErrorCode;
+	import com.fuelindustries.svn.core.errors.SVNErrorManager;
+	import com.fuelindustries.svn.core.errors.SVNErrorMessage;
 	import com.fuelindustries.svn.core.io.SVNCommand;
 	import com.fuelindustries.svn.core.io.svn.SVNItem;
 	import com.fuelindustries.svn.core.io.svn.SVNReader;
 	import com.fuelindustries.svn.core.util.SVNFileUtil;
+	import com.fuelindustries.svn.core.util.SVNLogType;
 	import com.fuelindustries.svn.events.GetFileEvent;
 
 	import flash.utils.ByteArray;
@@ -41,9 +45,7 @@ package com.fuelindustries.svn.core.io.commands
                     var item:SVNItem = SVNReader.readItem( ba );
                     if (item.getKind() != SVNItem.BYTES) 
                     {
-                        //TODO Implement errors
-                        //SVNErrorMessage err = SVNErrorMessage.create(SVNErrorCode.RA_SVN_MALFORMED_DATA, "Non-string as part of file contents");
-                        //SVNErrorManager.error(err, SVNLogType.NETWORK);
+                        SVNErrorManager.error(SVNErrorMessage.create(SVNErrorCode.RA_SVN_MALFORMED_DATA, "Non-string as part of file contents"), SVNLogType.NETWORK);
                     }
                     
                     if (item.getBytes().length == 0) 
@@ -64,10 +66,7 @@ package com.fuelindustries.svn.core.io.commands
               	var checksum:String = SVNFileUtil.toHexDigest(digest);
               	if( checksum != expectedChecksum )
               	{
-              		//TODO implement proper error
-              		//SVNErrorMessage err = SVNErrorMessage.create(SVNErrorCode.CHECKSUM_MISMATCH, "Checksum mismatch for ''{0}''\nexpected checksum: ''{1}''\nactual checksum: ''{2}''", new Object[]{path, expectedChecksum, resultChecksum});
-                    //SVNErrorManager.error(err, SVNLogType.NETWORK);	
-                    throw new Error( "Checksum mismatch for " + __path +"\nexpected checksum: " + expectedChecksum + "\nactual checksum: " + checksum  );
+                    SVNErrorManager.error(SVNErrorMessage.create(SVNErrorCode.CHECKSUM_MISMATCH, "Checksum mismatch for " + __path + "'\nexpected checksum: " + expectedChecksum + "\nactual checksum: " + checksum ), SVNLogType.NETWORK);	
               	}
 
               }

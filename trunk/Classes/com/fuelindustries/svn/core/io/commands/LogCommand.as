@@ -5,12 +5,16 @@ package com.fuelindustries.svn.core.io.commands
 	import com.fuelindustries.svn.core.SVNLogEntryPath;
 	import com.fuelindustries.svn.core.SVNProperties;
 	import com.fuelindustries.svn.core.SVNRevisionProperty;
+	import com.fuelindustries.svn.core.errors.SVNErrorCode;
+	import com.fuelindustries.svn.core.errors.SVNErrorManager;
+	import com.fuelindustries.svn.core.errors.SVNErrorMessage;
 	import com.fuelindustries.svn.core.io.SVNCommand;
 	import com.fuelindustries.svn.core.io.svn.SVNItem;
 	import com.fuelindustries.svn.core.io.svn.SVNNodeKind;
 	import com.fuelindustries.svn.core.io.svn.SVNReader;
 	import com.fuelindustries.svn.core.util.SVNDate;
 	import com.fuelindustries.svn.core.util.SVNHashMap;
+	import com.fuelindustries.svn.core.util.SVNLogType;
 	import com.fuelindustries.svn.events.LogEvent;
 
 	import flash.utils.ByteArray;
@@ -62,10 +66,7 @@ package com.fuelindustries.svn.core.io.commands
                     break;
                 }
                 if (item.getKind() != SVNItem.LIST) {
-                    
-                    //TODO implement proper errors
-                    //SVNErrorMessage err = SVNErrorMessage.create(SVNErrorCode.RA_SVN_MALFORMED_DATA, "Log entry not a list");
-                    //SVNErrorManager.error(err, SVNLogType.NETWORK);
+                    SVNErrorManager.error(SVNErrorMessage.create(SVNErrorCode.RA_SVN_MALFORMED_DATA, "Log entry not a list"), SVNLogType.NETWORK);
                     throw new Error( "Log entry not a list" );
                 }
 
@@ -86,10 +87,7 @@ package com.fuelindustries.svn.core.io.commands
                         
                         if (pathItem.getKind() != SVNItem.LIST) 
                         {
-                            //TODO implement proper errors
-                            //SVNErrorMessage err = SVNErrorMessage.create(SVNErrorCode.RA_SVN_MALFORMED_DATA, "Changed-path entry not a list");
-                            //SVNErrorManager.error(err, SVNLogType.NETWORK);
-                            throw new Error( "Changed-path entry not a list" );
+                            SVNErrorManager.error(SVNErrorMessage.create(SVNErrorCode.RA_SVN_MALFORMED_DATA, "Changed-path entry not a list"), SVNLogType.NETWORK);
                         }
                         
                         var pathItems:Array = SVNReader.parseTupleArray("sw(?sr)?(?s)", pathItem.getItems(), null);
@@ -124,10 +122,7 @@ package com.fuelindustries.svn.core.io.commands
                     }
                     if (wantCustomRevProps && (revisionProperties == null)) 
                     {
-                    	//TODO implement error
-                        //SVNErrorMessage err = SVNErrorMessage.create(SVNErrorCode.RA_NOT_IMPLEMENTED, "Server does not support custom revprops via log");
-                        //SVNErrorManager.error(err, SVNLogType.NETWORK);
-                        throw new Error( "Server does not support custom revprops via log" );
+                        SVNErrorManager.error(SVNErrorMessage.create(SVNErrorCode.RA_NOT_IMPLEMENTED, "Server does not support custom revprops via log"), SVNLogType.NETWORK);
                     }
 
                     if (revisionProperties != null) 

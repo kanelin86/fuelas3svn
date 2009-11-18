@@ -1,7 +1,11 @@
 package com.fuelindustries.svn.core 
 {
 	import com.fuelindustries.net.URL;
+	import com.fuelindustries.svn.core.errors.SVNErrorCode;
+	import com.fuelindustries.svn.core.errors.SVNErrorManager;
+	import com.fuelindustries.svn.core.errors.SVNErrorMessage;
 	import com.fuelindustries.svn.core.util.SVNEncodingUtil;
+	import com.fuelindustries.svn.core.util.SVNLogType;
 	import com.fuelindustries.svn.core.util.SVNPathUtil;
 
 	import flash.utils.Dictionary;
@@ -52,10 +56,7 @@ package com.fuelindustries.svn.core
 		{
 			if (url == null) 
 			{
-				//TODO: implement proper Error messaging
-				//SVNErrorMessage err = SVNErrorMessage.create(SVNErrorCode.BAD_URL, "URL cannot be NULL");
-				//SVNErrorManager.error(err, SVNLogType.DEFAULT);
-				throw new Error( "URL cannot be null" );
+				SVNErrorManager.error(SVNErrorMessage.create(SVNErrorCode.BAD_URL, "URL cannot be NULL"), SVNLogType.DEFAULT);
 			}
 	        
 			if( StringUtils.endsWith( url, "/" ) )
@@ -68,10 +69,7 @@ package com.fuelindustries.svn.core
         	
 			if (index <= 0) 
 			{
-				//TODO: implement proper Error messaging
-				//SVNErrorMessage err = SVNErrorMessage.create(SVNErrorCode.BAD_URL, "Malformed URL ''{0}''", url);
-				//SVNErrorManager.error(err, SVNLogType.DEFAULT);
-				throw new Error( "Malformed URL " + url );
+				SVNErrorManager.error(SVNErrorMessage.create(SVNErrorCode.BAD_URL, "Malformed URL " + url), SVNLogType.DEFAULT);
 			}
 	        
 	        
@@ -80,10 +78,7 @@ package com.fuelindustries.svn.core
         	
 			if( !DEFAULT_PORTS[ myProtocol ] && !StringUtils.startsWith( myProtocol, "svn+" ) ) 
 			{
-				//TODO: implement proper Error messaging
-				//SVNErrorMessage err = SVNErrorMessage.create(SVNErrorCode.BAD_URL, "URL protocol is not supported ''{0}''", url);
-				//SVNErrorManager.error(err, SVNLogType.DEFAULT);
-				throw new Error( "URL protocol is not supported " + url );
+				SVNErrorManager.error(SVNErrorMessage.create(SVNErrorCode.BAD_URL, "URL protocol is not supported " + url), SVNLogType.DEFAULT);
 			}
             
 			if( myProtocol == "file" ) 
@@ -94,10 +89,7 @@ package com.fuelindustries.svn.core
             	
 				if (slashInd == -1) 
 				{
-					//TODO: implement proper Error messaging
-					//no path, only host - follow subversion behaviour
-					//SVNErrorMessage err = SVNErrorMessage.create(SVNErrorCode.RA_ILLEGAL_URL, "Local URL ''{0}'' contains only a hostname, no path", url);
-					//SVNErrorManager.error(err, SVNLogType.DEFAULT);
+					SVNErrorManager.error(SVNErrorMessage.create(SVNErrorCode.RA_ILLEGAL_URL, "Local URL " + url +  " contains only a hostname, no path" ), SVNLogType.DEFAULT);
 					throw new Error( "Local URL " + url + " contains only a hostname, no path" );
 				}
             
@@ -112,11 +104,10 @@ package com.fuelindustries.svn.core
 					myHost = normalizedPath.substring( 0, slashInd );
 				}
             
-            	
-				//TODO: test for malformed URL and throw errors
+
 				var testURL:URL = new URL( myProtocol + "://" + normalizedPath );
-				//SVNErrorMessage err = SVNErrorMessage.create(SVNErrorCode.BAD_URL, "Malformed URL: ''{0}'': {1}", new Object[] {url, e.getLocalizedMessage()});
-				// SVNErrorManager.error(err, e, SVNLogType.DEFAULT);
+				
+				//SVNErrorManager.error(SVNErrorMessage.create(SVNErrorCode.BAD_URL, "Malformed URL: " + url ), SVNLogType.DEFAULT);
 				if (uriEncoded) 
 				{
 					//do it before decoding - if a caller said url is encoded 
@@ -151,11 +142,7 @@ package com.fuelindustries.svn.core
 			else 
 			{
 				var httpURL:URL = new URL( "http" + url.substring( index ) );
-
-	            
-				//TODO implement URL validation
-				//SVNErrorMessage err = SVNErrorMessage.create(SVNErrorCode.BAD_URL, "Malformed URL: ''{0}'': {1}", new Object[] {url, e.getLocalizedMessage()});
-				//SVNErrorManager.error(err, e, SVNLogType.DEFAULT);
+				//SVNErrorManager.error(SVNErrorMessage.create(SVNErrorCode.BAD_URL, "Malformed URL: " + url ), SVNLogType.DEFAULT);
 				myHost = httpURL.host;
 	            
 				var httpPath:String = norlmalizeURLPath( url, getURLPath( httpURL ) );
@@ -213,7 +200,7 @@ package com.fuelindustries.svn.core
 			}
 		}
 
-		private static function norlmalizeURLPath( url:String, path:String ):String// throws SVNException {
+		private static function norlmalizeURLPath( url:String, path:String ):String
 		{
 			var result:String = "";
 			var tokens:Array = path.split( "/" );
@@ -227,9 +214,8 @@ package com.fuelindustries.svn.core
 				}
 	        	else if( token == ".." )
 				{
-					//TODO: implement proper Error messaging
-					//SVNErrorMessage err = SVNErrorMessage.create(SVNErrorCode.BAD_URL, "URL ''{0}'' contains '..' element", url);
-					//SVNErrorManager.error(err, SVNLogType.DEFAULT);
+					
+					SVNErrorManager.error(SVNErrorMessage.create(SVNErrorCode.BAD_URL, "URL " + url + " contains '..' element"), SVNLogType.DEFAULT);
 					throw new Error( "URL " + url + " contains '..' element" );
 				}
 				else
