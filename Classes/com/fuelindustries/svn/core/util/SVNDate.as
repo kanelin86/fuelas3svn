@@ -126,13 +126,21 @@ package com.fuelindustries.svn.core.util
 			var sec:int = result[5] as int;
 			var ms:int = result[6] as int;
 
+			//This currently doesn't do anything as I haven't seen a date come back with a time zone attached.
+			//So it just assumes that it is at GMT time for now and offsets based on your system clock.
 			var timeZoneId:String;
 			if (timeZoneInd != -1 && timeZoneInd < str.length - 1 && str.indexOf( "Z" ) == -1 && str.indexOf( "z" ) == -1) 
 			{
 				timeZoneId = "GMT" + str.substring( timeZoneInd );
 			}
-        
-			return new SVNDate( year, month - 1, date, hour, min, sec, ms );
+			
+			var d:SVNDate = new SVNDate( year, month - 1, date, hour, min, sec, ms );
+        	
+        	var timezone:int = d.getDate().getTimezoneOffset();
+        	var offset:int = timezone / 60;
+        	d.setTimeZoneOffset( offset );
+        	
+			return d; 
 		}
 
 		private var __date:Date;
@@ -140,6 +148,11 @@ package com.fuelindustries.svn.core.util
 	    public function SVNDate(year:* = undefined, month:* = undefined, date:* = undefined, hours:* = undefined, minutes:* = undefined, seconds:* = undefined, ms:* = undefined)
 	    {
 	    	__date = new Date( year, month, date, hours, minutes, seconds, ms );	
+	    }
+	    
+	    public function setTimeZoneOffset( hours:int ):void
+	    {
+	    	__date.setHours( __date.getHours() - hours );	
 	    }
 	    
 	    public function setDate( d:Date ):void
