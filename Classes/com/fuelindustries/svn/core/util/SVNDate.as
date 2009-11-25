@@ -39,7 +39,7 @@ package com.fuelindustries.svn.core.util
 			{
 				var svndate:SVNDate = new SVNDate( );
 				svndate.setDate( date );
-				return( svndate.format( ) );	
+				return( svndate.format( ) );        
 			}
 		}
 
@@ -47,10 +47,10 @@ package com.fuelindustries.svn.core.util
 		{
 			if (str == null) 
 			{
-
+ 
 				SVNErrorManager.error( SVNErrorMessage.create( SVNErrorCode.BAD_DATE ), SVNLogType.DEFAULT );
 			}
-
+ 
 			var index:int = 0;
 			var charIndex:int = 0;
 			var startIndex:int = 0;
@@ -116,61 +116,70 @@ package com.fuelindustries.svn.core.util
 					result[index] = parseInt( segment );
 				}
 			}
-
+ 
 			var year:int = result[0] as int;
 			var month:int = result[1] as int;
 			var date:int = result[2] as int;
-
+ 
 			var hour:int = result[3] as int;
 			var min:int = result[4] as int;
 			var sec:int = result[5] as int;
 			var ms:int = result[6] as int;
-
-			//This currently doesn't do anything as I haven't seen a date come back with a time zone attached.
-			//So it just assumes that it is at GMT time for now and offsets based on your system clock.
-			var timeZoneId:String;
-			if (timeZoneInd != -1 && timeZoneInd < str.length - 1 && str.indexOf( "Z" ) == -1 && str.indexOf( "z" ) == -1) 
-			{
-				timeZoneId = "GMT" + str.substring( timeZoneInd );
-			}
-			
+                                                
+                                                
 			var d:SVNDate = new SVNDate( year, month - 1, date, hour, min, sec, ms );
-        	
-        	var timezone:int = d.getDate().getTimezoneOffset();
-        	var offset:int = timezone / 60;
-        	d.setTimeZoneOffset( offset );
-        	
+
+			var lowerCase:String = str.toLowerCase( );
+			var timeZoneIndex:int = lowerCase.indexOf( "z" );
+			if (timeZoneIndex != -1) 
+			{
+				var offset:int;
+                                                                
+				if( timeZoneIndex == str.length - 1 )
+				{
+					var timezone:int = d.getDate( ).getTimezoneOffset( );
+					offset = timezone / 60;
+				}
+				else
+				{
+					offset = parseInt( str.substr( timeZoneIndex ) );
+				}
+                                                                
+				d.setTimeZoneOffset( offset );
+			}
+                                                
 			return d; 
 		}
 
 		private var __date:Date;
-    	
-	    public function SVNDate(year:* = undefined, month:* = undefined, date:* = undefined, hours:* = undefined, minutes:* = undefined, seconds:* = undefined, ms:* = undefined)
-	    {
-	    	__date = new Date( year, month, date, hours, minutes, seconds, ms );	
-	    }
-	    
-	    public function setTimeZoneOffset( hours:int ):void
-	    {
-	    	__date.setHours( __date.getHours() - hours );	
-	    }
-	    
-	    public function setDate( d:Date ):void
-	    {
-			__date = d;    	
+
+		public function SVNDate(year:* = undefined, month:* = undefined, date:* = undefined, hours:* = undefined, minutes:* = undefined, seconds:* = undefined, ms:* = undefined)
+		{
+			__date = new Date( year, month, date, hours, minutes, seconds, ms ); 
 		}
-	    
-	    public function getDate():Date
-	    {
-	    	return( __date );	
+
+		public function setTimeZoneOffset( hours:int ):void
+		{
+			__date.setHours( __date.getHours( ) - hours );
+		}
+
+		public function setDate( d:Date ):void
+		{
+			__date = d;         
+		}
+
+		public function getDate():Date
+		{
+			return( __date );              
 		}
 
 		public function format():String 
 		{
 			//"yyyy-MM-dd'T'HH:mm:ss.SSS"
 			var date:Date = getDate( );
-			var dateString:String = date.getFullYear( ) + "-" + ( date.getMonth( ) + 1 ) + "-" + date.getDate( ) + "T" + date.getHours( ) + ":" + date.getMinutes( ) + ":" + date.getSeconds( ) + "." + date.getMilliseconds( ) + "Z";
+			var dateString:String = date.getFullYear( ) + "-" + ( date.getMonth( ) + 1 ) + "-" + date.getDate( ) + "T" + date.getHours( ) + ":" + date.getMinutes( ) + ":" + date.getSeconds( ) + "." + date.getMilliseconds( );
 			return( dateString );
 		}
 	}
 }
+
